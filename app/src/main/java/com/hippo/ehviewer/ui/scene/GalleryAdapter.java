@@ -18,15 +18,15 @@ package com.hippo.ehviewer.ui.scene;
 
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.hippo.drawable.TriangleDrawable;
@@ -191,23 +191,27 @@ abstract class GalleryAdapter extends RecyclerView.Adapter<GalleryHolder> {
                 holder.rating.setRating(gi.rating);
                 TextView category = holder.category;
                 String newCategoryText = EhUtils.getCategory(gi.category);
-                if (!newCategoryText.equals(category.getText())) {
+                if (!newCategoryText.equals(category.getText().toString())) {
                     category.setText(newCategoryText);
                     category.setBackgroundColor(EhUtils.getCategoryColor(gi.category));
                 }
                 holder.posted.setText(gi.posted);
                 if (gi.pages == 0 || !Settings.getShowGalleryPages()) {
                     holder.pages.setText(null);
-                    RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) holder.simpleLanguage.getLayoutParams();
-                    lp.addRule(RelativeLayout.LEFT_OF, 0);
-                    lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                    holder.pages.setVisibility(View.GONE);
                 } else {
                     holder.pages.setText(Integer.toString(gi.pages) + "P");
-                    RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) holder.simpleLanguage.getLayoutParams();
-                    lp.addRule(RelativeLayout.LEFT_OF, R.id.pages);
-                    lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, 0);
+                    holder.pages.setVisibility(View.VISIBLE);
                 }
-                holder.simpleLanguage.setText(gi.simpleLanguage);
+                if (TextUtils.isEmpty(gi.simpleLanguage)) {
+                    holder.simpleLanguage.setText(null);
+                    holder.simpleLanguage.setVisibility(View.GONE);
+                } else {
+                    holder.simpleLanguage.setText(gi.simpleLanguage);
+                    holder.simpleLanguage.setVisibility(View.VISIBLE);
+                }
+                holder.favourited.setVisibility((gi.favoriteSlot >= -1 && gi.favoriteSlot <= 10) ? View.VISIBLE : View.GONE);
+                holder.downloaded.setVisibility(gi.downloaded ? View.VISIBLE : View.GONE);
                 break;
             }
             case TYPE_GRID: {
@@ -228,9 +232,6 @@ abstract class GalleryAdapter extends RecyclerView.Adapter<GalleryHolder> {
         }
 
         // Update transition name
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            long gid = gi.gid;
-            holder.thumb.setTransitionName(TransitionNameFactory.getThumbTransitionName(gid));
-        }
+        ViewCompat.setTransitionName(holder.thumb, TransitionNameFactory.getThumbTransitionName(gi.gid));
     }
 }
