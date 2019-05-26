@@ -144,7 +144,7 @@ public final class EhFilter {
         }
     }
 
-    public synchronized boolean needCallApi() {
+    public synchronized boolean needTags() {
         return 0 != mTagFilterList.size() || 0 != mTagNamespaceFilterList.size();
     }
 
@@ -157,7 +157,6 @@ public final class EhFilter {
         String title = info.title;
         List<Filter> filters = mTitleFilterList;
         if (null != title && filters.size() > 0) {
-            title = title.toLowerCase();
             for (int i = 0, n = filters.size(); i < n; i++) {
                 if (filters.get(i).enable && title.contains(filters.get(i).text)) {
                     return false;

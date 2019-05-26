@@ -40,6 +40,9 @@ public class EhUrl {
     public static final String API_E = HOST_E + "api.php";
     public static final String API_EX = HOST_EX + "api.php";
 
+    public static final String URL_POPULAR_E = "https://e-hentai.org/popular";
+    public static final String URL_POPULAR_EX = "https://exhentai.org/popular";
+
     public static final String URL_IMAGE_SEARCH_E = "https://upload.e-hentai.org/image_lookup.php";
     public static final String URL_IMAGE_SEARCH_EX = "https://exhentai.org/upload/image_lookup.php";
 
@@ -55,8 +58,14 @@ public class EhUrl {
     public static final String ORIGIN_EX = REFERER_EX;
     public static final String ORIGIN_E = REFERER_E;
 
-    public static final String UCONFIG_E = HOST_E + "uconfig.php";
-    public static final String UCONFIG_EX = HOST_EX + "uconfig.php";
+    public static final String URL_UCONFIG_E = HOST_E + "uconfig.php";
+    public static final String URL_UCONFIG_EX = HOST_EX + "uconfig.php";
+
+    public static final String URL_MY_TAGS_E = HOST_E + "mytags";
+    public static final String URL_MY_TAGS_EX = HOST_EX + "mytags";
+
+    public static final String URL_WATCHED_E = HOST_E + "watched";
+    public static final String URL_WATCHED_EX = HOST_EX + "watched";
 
     private static final String URL_PREFIX_THUMB_E = "https://ul.ehgt.org/";
     private static final String URL_PREFIX_THUMB_EX = "https://exhentai.org/t/";
@@ -119,9 +128,19 @@ public class EhUrl {
         switch (Settings.getGallerySite()) {
             default:
             case SITE_E:
-                return UCONFIG_E;
+                return URL_UCONFIG_E;
             case SITE_EX:
-                return UCONFIG_EX;
+                return URL_UCONFIG_EX;
+        }
+    }
+
+    public static String getMyTagsUrl() {
+        switch (Settings.getGallerySite()) {
+            default:
+            case SITE_E:
+                return URL_MY_TAGS_E;
+            case SITE_EX:
+                return URL_MY_TAGS_EX;
         }
     }
 
@@ -153,6 +172,17 @@ public class EhUrl {
     }
 
     @NonNull
+    public static String getPopularUrl() {
+        switch (Settings.getGallerySite()) {
+            default:
+            case SITE_E:
+                return URL_POPULAR_E;
+            case SITE_EX:
+                return URL_POPULAR_EX;
+        }
+    }
+
+    @NonNull
     public static String getImageSearchUrl() {
         switch (Settings.getGallerySite()) {
             default:
@@ -160,6 +190,17 @@ public class EhUrl {
                 return URL_IMAGE_SEARCH_E;
             case SITE_EX:
                 return URL_IMAGE_SEARCH_EX;
+        }
+    }
+
+    @NonNull
+    public static String getWatchedUrl() {
+        switch (Settings.getGallerySite()) {
+            default:
+            case SITE_E:
+                return URL_WATCHED_E;
+            case SITE_EX:
+                return URL_WATCHED_EX;
         }
     }
 

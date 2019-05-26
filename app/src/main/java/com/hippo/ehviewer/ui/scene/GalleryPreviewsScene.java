@@ -330,6 +330,11 @@ public class GalleryPreviewsScene extends ToolbarScene implements EasyRecyclerVi
                 mAdapter.notifyItemRangeInserted(positionStart, itemCount);
             }
         }
+
+        @Override
+        protected boolean isDuplicate(GalleryPreview d1, GalleryPreview d2) {
+            return false;
+        }
     }
 
     private void onGetPreviewSetSuccess(Pair<PreviewSet, Integer> result, int taskId) {
@@ -341,8 +346,7 @@ public class GalleryPreviewsScene extends ToolbarScene implements EasyRecyclerVi
                 list.add(previewSet.getGalleryPreview(mGalleryInfo.gid, i));
             }
 
-            mHelper.setPages(taskId, result.second);
-            mHelper.onGetPageData(taskId, list);
+            mHelper.onGetPageData(taskId, result.second, 0, list);
         }
     }
 

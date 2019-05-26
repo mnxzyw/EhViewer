@@ -24,7 +24,7 @@ import com.hippo.ehviewer.AppConfig;
 import com.hippo.ehviewer.GetText;
 import com.hippo.ehviewer.R;
 import com.hippo.ehviewer.Settings;
-import com.hippo.ehviewer.client.data.GalleryComment;
+import com.hippo.ehviewer.client.data.GalleryCommentList;
 import com.hippo.ehviewer.client.data.GalleryDetail;
 import com.hippo.ehviewer.client.data.GalleryInfo;
 import com.hippo.ehviewer.client.data.PreviewSet;
@@ -46,7 +46,6 @@ import com.hippo.ehviewer.client.parser.RateGalleryParser;
 import com.hippo.ehviewer.client.parser.SignInParser;
 import com.hippo.ehviewer.client.parser.TorrentParser;
 import com.hippo.ehviewer.client.parser.VoteCommentParser;
-import com.hippo.ehviewer.client.parser.WhatsHotParser;
 import com.hippo.network.StatusCodeException;
 import com.hippo.util.ExceptionUtils;
 import com.hippo.yorozuya.AssertUtils;
@@ -103,8 +102,10 @@ public class EhEngine {
         }
 
         if (e instanceof ParseException) {
-            if (body != null && !body.contains("<")){
+            if (body != null && !body.contains("<")) {
                 throw new EhException(body);
+            } else if (TextUtils.isEmpty(body)) {
+                throw new EhException(GetText.getString(R.string.error_empty_html));
             } else {
                 if (Settings.getSaveParseErrorBody()) {
                     AppConfig.saveParseErrorBody((ParseException) e);
@@ -174,6 +175,58 @@ public class EhEngine {
         }
     }
 
+    private static void fillGalleryList(@Nullable EhClient.Task task, OkHttpClient okHttpClient, List<GalleryInfo> list, String url, boolean filter) throws Throwable {
+        // Filter title and uploader
+        if (filter) {
+            for (int i = 0, n = list.size(); i < n; i++) {
+                GalleryInfo info = list.get(i);
+                if (!sEhFilter.filterTitle(info) || !sEhFilter.filterUploader(info)) {
+                    list.remove(i);
+                    i--;
+                    n--;
+                }
+            }
+        }
+
+        boolean hasTags = false;
+        boolean hasPages = false;
+        boolean hasRated = false;
+        for (GalleryInfo gi : list) {
+            if (gi.simpleTags != null) {
+                hasTags = true;
+            }
+            if (gi.pages != 0) {
+                hasPages = true;
+            }
+            if (gi.rated) {
+                hasRated = true;
+            }
+        }
+
+        boolean needApi = (filter && sEhFilter.needTags() && !hasTags) ||
+                (Settings.getShowGalleryPages() && !hasPages) ||
+                hasRated;
+        if (needApi) {
+            fillGalleryListByApi(task, okHttpClient, list, url);
+        }
+
+        // Filter tag
+        if (filter) {
+            for (int i = 0, n = list.size(); i < n; i++) {
+                GalleryInfo info = list.get(i);
+                if (!sEhFilter.filterTag(info) || !sEhFilter.filterTagNamespace(info)) {
+                    list.remove(i);
+                    i--;
+                    n--;
+                }
+            }
+        }
+
+        for (GalleryInfo info : list) {
+            info.thumb = EhUrl.getFixedPreviewThumbUrl(info.thumb);
+        }
+    }
+
     public static GalleryListParser.Result getGalleryList(@Nullable EhClient.Task task, OkHttpClient okHttpClient,
             String url) throws Throwable {
         String referer = EhUrl.getReferer();
@@ -202,50 +255,7 @@ public class EhEngine {
             throw e;
         }
 
-        // Filter title and uploader
-        List<GalleryInfo> list = result.galleryInfoList;
-        for (int i = 0, n = list.size(); i < n; i++) {
-            GalleryInfo info = list.get(i);
-            if (!sEhFilter.filterTitle(info) || !sEhFilter.filterUploader(info)) {
-                list.remove(i);
-                i--;
-                n--;
-            }
-        }
-
-        boolean anyRated = false;
-        for (GalleryInfo info : list) {
-            if (info.rated) {
-                anyRated = true;
-                break;
-            }
-        }
-
-        boolean needFillByApi = list.size() > 0
-                && (TextUtils.isEmpty(list.get(0).uploader)
-                        || anyRated
-                        || Settings.getShowJpnTitle()
-                        || Settings.getShowGalleryPages()
-                        || sEhFilter.needCallApi());
-
-        if (needFillByApi) {
-            // Fill by api
-            fillGalleryListByApi(task, okHttpClient, list, url);
-
-            // Filter tag
-            for (int i = 0, n = list.size(); i < n; i++) {
-                GalleryInfo info = list.get(i);
-                if (!sEhFilter.filterTag(info) || !sEhFilter.filterTagNamespace(info)) {
-                    list.remove(i);
-                    i--;
-                    n--;
-                }
-            }
-        }
-
-        for (GalleryInfo info : list) {
-            info.thumb = EhUrl.getFixedPreviewThumbUrl(info.thumb);
-        }
+        fillGalleryList(task, okHttpClient, result.galleryInfoList, url, true);
 
         return result;
     }
@@ -408,10 +418,15 @@ public class EhEngine {
         }
     }
 
-    public static GalleryComment[] commentGallery(@Nullable EhClient.Task task,
-            OkHttpClient okHttpClient, String url, String comment) throws Throwable {
-        FormBody.Builder builder = new FormBody.Builder()
-                .add("commenttext_new", comment);
+    public static GalleryCommentList commentGallery(@Nullable EhClient.Task task,
+            OkHttpClient okHttpClient, String url, String comment, String id) throws Throwable {
+        FormBody.Builder builder = new FormBody.Builder();
+        if (id == null) {
+            builder.add("commenttext_new", comment);
+        } else {
+            builder.add("commenttext_edit", comment);
+            builder.add("edit_comment", id);
+        }
         String origin = EhUrl.getOrigin();
         Log.d(TAG, url);
         Request request = new EhRequestBuilder(url, url, origin)
@@ -512,15 +527,7 @@ public class EhEngine {
             throw e;
         }
 
-        List<GalleryInfo> list = result.galleryInfoList;
-
-        if (list.size() > 0 && (TextUtils.isEmpty(list.get(0).uploader) || Settings.getShowJpnTitle() || Settings.getShowGalleryPages())) {
-            fillGalleryListByApi(task, okHttpClient, list, url);
-        }
-
-        for (GalleryInfo info : list) {
-            info.thumb = EhUrl.getFixedPreviewThumbUrl(info.thumb);
-        }
+        fillGalleryList(task, okHttpClient, result.galleryInfoList, url, false);
 
         return result;
     }
@@ -629,14 +636,7 @@ public class EhEngine {
             throw e;
         }
 
-        List<GalleryInfo> list = result.galleryInfoList;
-        if (list.size() > 0 && (TextUtils.isEmpty(list.get(0).uploader) || Settings.getShowJpnTitle() || Settings.getShowGalleryPages())) {
-            fillGalleryListByApi(task, okHttpClient, list, url);
-        }
-
-        for (GalleryInfo info : list) {
-            info.thumb = EhUrl.getFixedPreviewThumbUrl(info.thumb);
-        }
+        fillGalleryList(task, okHttpClient, result.galleryInfoList, url, false);
 
         return result;
     }
@@ -748,46 +748,6 @@ public class EhEngine {
         }
 
         return null;
-    }
-
-    public static List<GalleryInfo> getWhatsHot(@Nullable EhClient.Task task,
-            OkHttpClient okHttpClient) throws Throwable {
-        String url = EhUrl.HOST_E;
-        Log.d(TAG, url);
-        Request request = new EhRequestBuilder(url, null).build();
-        Call call = okHttpClient.newCall(request);
-
-        // Put call
-        if (null != task) {
-            task.setCall(call);
-        }
-
-        String body = null;
-        Headers headers = null;
-        List<GalleryInfo> list;
-        int code = -1;
-        try {
-            Response response = call.execute();
-            code = response.code();
-            headers = response.headers();
-            body = response.body().string();
-            list = WhatsHotParser.parse(body);
-        } catch (Throwable e) {
-            ExceptionUtils.throwIfFatal(e);
-            throwException(call, code, headers, body, e);
-            throw e;
-        }
-
-        if (list.size() > 0) {
-            // Fill by api
-            fillGalleryListByApi(task, okHttpClient, list, url);
-        }
-
-        for (GalleryInfo info : list) {
-            info.thumb = EhUrl.getFixedPreviewThumbUrl(info.thumb);
-        }
-
-        return list;
     }
 
     private static ProfileParser.Result getProfileInternal(@Nullable EhClient.Task task,
@@ -952,35 +912,7 @@ public class EhEngine {
             throw e;
         }
 
-        // Filter title and uploader
-        List<GalleryInfo> list = result.galleryInfoList;
-        for (int i = 0, n = list.size(); i < n; i++) {
-            GalleryInfo info = list.get(i);
-            if (!sEhFilter.filterTitle(info) || !sEhFilter.filterUploader(info)) {
-                list.remove(i);
-                i--;
-                n--;
-            }
-        }
-
-        if (list.size() > 0 && (TextUtils.isEmpty(list.get(0).uploader) || Settings.getShowJpnTitle() || Settings.getShowGalleryPages() || sEhFilter.needCallApi())) {
-            // Fill by api
-            fillGalleryListByApi(task, okHttpClient, list, url);
-
-            // Filter tag
-            for (int i = 0, n = list.size(); i < n; i++) {
-                GalleryInfo info = list.get(i);
-                if (!sEhFilter.filterTag(info) || !sEhFilter.filterTagNamespace(info)) {
-                    list.remove(i);
-                    i--;
-                    n--;
-                }
-            }
-        }
-
-        for (GalleryInfo info : list) {
-            info.thumb = EhUrl.getFixedPreviewThumbUrl(info.thumb);
-        }
+        fillGalleryList(task, okHttpClient, result.galleryInfoList, url, true);
 
         return result;
     }

@@ -28,6 +28,7 @@ import com.hippo.ehviewer.client.EhConfig;
 import com.hippo.ehviewer.client.EhUtils;
 import com.hippo.ehviewer.client.data.FavListUrlBuilder;
 import com.hippo.ehviewer.ui.CommonOperations;
+import com.hippo.ehviewer.ui.scene.GalleryListScene;
 import com.hippo.glgallery.GalleryView;
 import com.hippo.unifile.UniFile;
 import com.hippo.util.ExceptionUtils;
@@ -36,6 +37,7 @@ import com.hippo.yorozuya.FileUtils;
 import com.hippo.yorozuya.MathUtils;
 import com.hippo.yorozuya.NumberUtils;
 import java.io.File;
+import java.util.Locale;
 
 public class Settings {
 
@@ -49,6 +51,16 @@ public class Settings {
         sContext = context.getApplicationContext();
         sSettingsPre = PreferenceManager.getDefaultSharedPreferences(sContext);
         sEhConfig = loadEhConfig();
+        fixDefaultValue(context);
+    }
+
+    private static void fixDefaultValue(Context context) {
+        // Enable builtin hosts if the country is CN
+        if (!sSettingsPre.contains(KEY_BUILT_IN_HOSTS)) {
+            if ("CN".equals(Locale.getDefault().getCountry())) {
+                putBuiltInHosts(true);
+            }
+        }
     }
 
     private static EhConfig loadEhConfig() {
@@ -265,6 +277,22 @@ public class Settings {
 
     public static void putGallerySite(int value) {
         putIntToStr(KEY_GALLERY_SITE, value);
+    }
+
+    private static final String KEY_LAUNCH_PAGE = "launch_page";
+    private static final int DEFAULT_LAUNCH_PAGE = 0;
+
+    public static String getLaunchPageGalleryListSceneAction() {
+        int value = getIntFromStr(KEY_LAUNCH_PAGE, DEFAULT_LAUNCH_PAGE);
+        switch (value) {
+            default:
+            case 0:
+                return GalleryListScene.ACTION_HOMEPAGE;
+            case 1:
+                return GalleryListScene.ACTION_SUBSCRIPTION;
+            case 2:
+                return GalleryListScene.ACTION_WHATS_HOT;
+        }
     }
 
     public static final String KEY_LIST_MODE = "list_mode";
