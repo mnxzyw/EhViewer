@@ -140,6 +140,7 @@
     <string name="error_password_cannot_empty">Password cannot be an empty string</string>
     <string name="skip_signing_in">Continue without signing in</string>
     <string name="sign_in_failed">Sign in failed</string>
+    <string name="sign_in_failed_tip">If this issue continues, try \"Sign in via WebView\" or \"Sign in via cookies\"</string>
     <string name="sign_in_failed_plain">Perhaps it is a mistake due to website update or something wrong happened. You may try sign in via WebView or enter cookie or skip signing in under sign in button. But you may be a "Sad Panda" after skipping signing in. Try "Sign in via cookies" first if you had signed in on 0.6.x version.</string>
     <string name="press_twice_exit">Press twice to exit</string>
     <string name="content_layout_restore_tip">Tap to retry</string>
@@ -214,6 +215,7 @@
     <string name="remove_from_favourites">Remove from favourites</string>
 
     <string name="stop_downloading">Stop downloading</string>
+    <string name="delete_downloads">Delete downloads</string>
 
     <string name="quick_search">Quick search</string>
     <string name="quick_search_tip">Tap \"+\" to add Quick Search</string>
@@ -339,6 +341,7 @@
     <string name="vote_failed">Vote failed</string>
     <string name="check_vote_status">View vote details</string>
     <string name="click_more_comments">Click to load more comments</string>
+    <string name="last_edited">Last edited: %s</string>
 
     <!-- Gallery Previews -->
     <string name="gallery_previews">Gallery Previews</string>
@@ -509,6 +512,7 @@
     <string name="settings_read_screen_rotation_default">Default</string>
     <string name="settings_read_screen_rotation_portrait">Portrait</string>
     <string name="settings_read_screen_rotation_landscape">Landscape</string>
+    <string name="settings_read_screen_rotation_sensor">Auto rotate</string>
     <string name="settings_read_reading_direction">Reading direction</string>
     <string name="settings_read_reading_direction_left_to_right">Left to right</string>
     <string name="settings_read_reading_direction_right_to_Left">Right to left</string>

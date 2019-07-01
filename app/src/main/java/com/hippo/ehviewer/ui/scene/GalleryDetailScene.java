@@ -1096,7 +1096,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
         if (null != keyword) {
             ListUrlBuilder lub = new ListUrlBuilder();
             lub.setMode(ListUrlBuilder.MODE_NORMAL);
-            lub.setKeyword(keyword);
+            lub.setKeyword("\"" + keyword + "\"");
             GalleryListScene.startScene(this, lub);
             return;
         }
@@ -1186,7 +1186,15 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
         } else if (mDownload == v) {
             GalleryInfo galleryInfo = getGalleryInfo();
             if (galleryInfo != null) {
-                CommonOperations.startDownload(activity, galleryInfo, false);
+                if (EhApplication.getDownloadManager(context).getDownloadState(galleryInfo.gid) == DownloadInfo.STATE_INVALID) {
+                    CommonOperations.startDownload(activity, galleryInfo, false);
+                } else {
+                    new AlertDialog.Builder(context)
+                        .setTitle(R.string.download_remove_dialog_title)
+                        .setMessage(getString(R.string.download_remove_dialog_message, galleryInfo.title))
+                        .setPositiveButton(android.R.string.ok, (dialog1, which1) -> EhApplication.getDownloadManager(context).deleteDownload(galleryInfo.gid))
+                        .show();
+                }
             }
         } else if (mRead == v) {
             GalleryInfo galleryInfo = null;

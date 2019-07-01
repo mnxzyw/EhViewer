@@ -98,6 +98,7 @@
     <string name="error_password_cannot_empty">密码不可为空</string>
     <string name="skip_signing_in">跳过登录</string>
     <string name="sign_in_failed">登录失败</string>
+    <string name="sign_in_failed_tip">若持续出错，请尝试“通过网页登录”或“通过 Cookie 登录”。</string>
     <string name="sign_in_failed_plain">这可能是网站更新导致的，也有可能是发生了奇怪的事情。您可以选择在登录按钮下方通过网页登录或者输入 cookie，或者跳过登录。跳过登录可能导致无法正常使用应用。如果你已经在 0.6.x 版登录过了，请优先尝试选择“通过 Cookie 登录”。</string>
     <string name="press_twice_exit">再按一次退出</string>
     <string name="content_layout_restore_tip">点击重试</string>
@@ -170,6 +171,7 @@
     <string name="remove_from_favourites">移除收藏</string>
 
     <string name="stop_downloading">停止下载</string>
+    <string name="delete_downloads">删除下载</string>
 
     <string name="quick_search">快速搜索</string>
     <string name="quick_search_tip">点击“+”来添加快速搜索</string>
@@ -293,6 +295,7 @@
     <string name="vote_failed">投票失败</string>
     <string name="check_vote_status">查看投票情况</string>
     <string name="click_more_comments">点击加载更多评论</string>
+    <string name="last_edited">上次修改时间：%s</string>
 
     <!-- Gallery Previews -->
     <string name="gallery_previews">画廊预览</string>
@@ -464,6 +467,7 @@
     <string name="settings_read_screen_rotation_default">系统默认</string>
     <string name="settings_read_screen_rotation_portrait">竖屏</string>
     <string name="settings_read_screen_rotation_landscape">横屏</string>
+    <string name="settings_read_screen_rotation_sensor">自动旋转</string>
     <string name="settings_read_reading_direction">阅读方向</string>
     <string name="settings_read_reading_direction_left_to_right">从左至右</string>
     <string name="settings_read_reading_direction_right_to_Left">从右至左</string>

@@ -82,6 +82,7 @@ import com.hippo.ehviewer.download.DownloadManager;
 import com.hippo.ehviewer.ui.CommonOperations;
 import com.hippo.ehviewer.ui.GalleryActivity;
 import com.hippo.ehviewer.ui.MainActivity;
+import com.hippo.ehviewer.ui.dialog.SelectItemWithIconAdapter;
 import com.hippo.ehviewer.widget.GalleryInfoContentHelper;
 import com.hippo.ehviewer.widget.SearchBar;
 import com.hippo.ehviewer.widget.SearchLayout;
@@ -1061,39 +1062,24 @@ public final class GalleryListScene extends BaseScene
             return true;
         }
 
-        boolean download;
-        switch (mDownloadManager.getDownloadState(gi.gid)) {
-            default:
-            case DownloadInfo.STATE_INVALID:
-                download = true;
-                break;
-            case DownloadInfo.STATE_NONE:
-                download = true;
-                break;
-            case DownloadInfo.STATE_WAIT:
-                download = false;
-                break;
-            case DownloadInfo.STATE_DOWNLOAD:
-                download = false;
-                break;
-            case DownloadInfo.STATE_FINISH:
-                download = true;
-                break;
-            case DownloadInfo.STATE_FAILED:
-                download = true;
-                break;
-        }
-        boolean favourite = gi.favoriteSlot == -2;
+        boolean downloaded = mDownloadManager.getDownloadState(gi.gid) != DownloadInfo.STATE_INVALID;
+        boolean favourited = gi.favoriteSlot != -2;
 
         CharSequence[] items = new CharSequence[] {
             context.getString(R.string.read),
-            context.getString(download ? R.string.download : R.string.stop_downloading),
-            context.getString(favourite ? R.string.add_to_favourites : R.string.remove_from_favourites),
+            context.getString(downloaded ? R.string.delete_downloads : R.string.download),
+            context.getString(favourited ? R.string.remove_from_favourites : R.string.add_to_favourites),
+        };
+
+        int[] icons = new int[] {
+            R.drawable.v_book_open_x24,
+            downloaded ? R.drawable.v_delete_x24 : R.drawable.v_download_x24,
+            favourited ? R.drawable.v_heart_broken_x24 : R.drawable.v_heart_x24,
         };
 
         new AlertDialog.Builder(context)
                 .setTitle(EhUtils.getSuitableTitle(gi))
-                .setItems(items, (dialog, which) -> {
+                .setAdapter(new SelectItemWithIconAdapter(context, items, icons), (dialog, which) -> {
                     switch (which) {
                         case 0: // Read
                             Intent intent = new Intent(activity, GalleryActivity.class);
@@ -1102,17 +1088,21 @@ public final class GalleryListScene extends BaseScene
                             startActivity(intent);
                             break;
                         case 1: // Download
-                            if (download) {
-                                CommonOperations.startDownload(activity, gi, false);
+                            if (downloaded) {
+                                new AlertDialog.Builder(context)
+                                    .setTitle(R.string.download_remove_dialog_title)
+                                    .setMessage(getString(R.string.download_remove_dialog_message, gi.title))
+                                    .setPositiveButton(android.R.string.ok, (dialog1, which1) -> mDownloadManager.deleteDownload(gi.gid))
+                                    .show();
                             } else {
-                                mDownloadManager.stopDownload(gi.gid);
+                                CommonOperations.startDownload(activity, gi, false);
                             }
                             break;
                         case 2: // Favorites
-                            if (favourite) {
-                                CommonOperations.addToFavorites(activity, gi, new AddToFavoriteListener(context, activity.getStageId(), getTag()));
-                            } else {
+                            if (favourited) {
                                 CommonOperations.removeFromFavorites(activity, gi, new RemoveFromFavoriteListener(context, activity.getStageId(), getTag()));
+                            } else {
+                                CommonOperations.addToFavorites(activity, gi, new AddToFavoriteListener(context, activity.getStageId(), getTag()));
                             }
                             break;
                     }
